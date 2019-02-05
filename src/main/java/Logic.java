@@ -20,7 +20,7 @@ public class Logic {
         this.percent = percent;
         this.allowed = allowed;
         this.allowedPercent = allowedPercent;
-        SshClient ssh = new SshClient();
+        SshClient ssh = new SshClient("cisco","cisco","cisco");
         ArrayList<String> result = ssh.executeCommand("show running-config interface "+WAN.snapshotList.get(WAN.snapshotList.size()-1).getIfDescr());
         for (String str: result) {
             if (str.contains("bandwidth qos-reference")) {

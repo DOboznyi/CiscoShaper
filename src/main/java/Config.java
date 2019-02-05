@@ -8,8 +8,10 @@ public class Config {
     String password;
     String community;
     ArrayList<String> Protocols;
+    ArrayList<Host> hosts;
 
     public Config(String Path){
+        hosts = new ArrayList<Host>();
         ArrayList<String> list = new ArrayList<String>();
         try
         {
@@ -24,14 +26,48 @@ public class Config {
             System.out.println("File does Not Exist Please Try Again: ");
         }
         for (int i = 0; i<list.size();i++) {
-            String str = ;
-            if (str.contains())
+            if (list.get(i).contains("host:")){
+                i++;
+                if (list.get(i).contains("name:")){
+                    i++;
+                    String name = list.get(i);
+                    i++;
+                    if (list.get(i).contains("user:")) {
+                        i++;
+                        String user = list.get(i);
+                        i++;
+                        if (list.get(i).contains("password:")) {
+                            i++;
+                            String password = list.get(i);
+                            i++;
+                            if (list.get(i).contains("community:")) {
+                                i++;
+                                String community = list.get(i);
+                                i++;
+                                if (list.get(i).contains("protocols:")) {
+                                    ArrayList<String> protocols = new ArrayList<String>();
+                                    while(i+1<list.size()&&list.get(i+1).contains("-")&&!list.get(i+1).contains("host:")) {
+                                        i++;
+                                        if (list.get(i).contains("-")) {
+                                            i++;
+                                            String protocol = list.get(i);
+                                            protocols.add(protocol);
+                                        }
+                                    }
+                                    Host host = new Host(name,user,password,community,protocols);
+                                    hosts.add(host);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
     private ArrayList<PolicyMap> getPolicyMaps(){
         SshClient ssh = new SshClient(user,name,password);
         ArrayList<String> results = ssh.executeCommand("show policy-map");
-
+        return null;
     }
 }
