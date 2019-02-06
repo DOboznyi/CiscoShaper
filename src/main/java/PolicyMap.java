@@ -4,6 +4,7 @@ public class PolicyMap {
     String name;
     ClassMap classMap;
     long shaper;
+    int TTL;
 
     public ArrayList<String> getReverceCommands() {
         return reverceCommands;
@@ -22,8 +23,6 @@ public class PolicyMap {
     public void setTTL(int TTL) {
         this.TTL = TTL;
     }
-
-    int TTL;
 
     public ClassMap getClassMap() {
         return classMap;
