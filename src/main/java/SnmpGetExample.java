@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 public class SnmpGetExample
 {
-    private static String  ipAddress  = "172.16.0.131";
+    private static String  ipAddress  = "172.17.0.130";
 
     private static String  port    = "161";
 
@@ -23,7 +23,7 @@ public class SnmpGetExample
 
     private static int    snmpVersion  = SnmpConstants.version1;
 
-    private static String  community  = "public";
+    private static String  community  = "private";
 
     public static void main(String[] args) throws Exception
     {
@@ -87,7 +87,7 @@ public class SnmpGetExample
             System.out.println("Error: Agent Timeout... ");
         }
         snmp.close();
-        SNMPClient snmpClient = new SNMPClient("172.16.0.131", "public","161");
+        SNMPClient snmpClient = new SNMPClient("172.17.0.130", "private","161");
         snmpClient.start();
         HashMap<Integer,Port> ports =snmpClient.getInterfaceTable(".1.3.6.1.2.1.2.2");
         snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1",ports);

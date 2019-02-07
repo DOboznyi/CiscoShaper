@@ -29,7 +29,7 @@ public class Port {
     }
 
     public void addInfo(String info, int Column, long Time){
-        if (snapshotList.get(snapshotList.size()-1).Time!= Time)snapshotList.add(new Snapshot());
+        if (snapshotList.size()==0||snapshotList.get(snapshotList.size()-1).Time!= Time)snapshotList.add(new Snapshot());
         snapshotList.get(snapshotList.size()-1).addInfo(info,Column,Time);
     }
 }

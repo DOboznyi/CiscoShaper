@@ -2,7 +2,7 @@ import java.util.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-public class Logic {
+public class Logic extends Thread{
     Port WAN;
     Long bandwidth;
     Port LAN;
@@ -13,34 +13,67 @@ public class Logic {
     int shaper;
     Host host;
 
-    public Logic(Host host,Port WAN, Port LAN, double percent, double allowedPercent, ArrayList<String> allowed){
+    public Logic(Host host, Port WAN, Port LAN, double percent, double allowedPercent) {
         this.host = host;
         this.WAN = WAN;
         this.LAN = LAN;
         this.percent = percent;
-        this.allowed = allowed;
+        allowed = host.protocols;
         this.allowedPercent = allowedPercent;
-        SshClient ssh = new SshClient(host.getUser(),host.getName(),host.getPassword());
-        ArrayList<String> result = ssh.executeCommand("show running-config interface "+WAN.snapshotList.get(WAN.snapshotList.size()-1).getIfDescr());
-        for (String str: result) {
-            if (str.contains("bandwidth qos-reference")) {
-                bandwidth = Long.parseLong(str.replaceAll(str, ""));
+        policyMaps = new ArrayList<PolicyMap>();
+        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+        ArrayList<String> result = ssh.executeCommand("show running-config interface " + WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfDescr());
+        for (String str : result) {
+            if (str.contains(" bandwidth qos-reference ")) {
+                bandwidth = Long.parseLong(str.replaceAll(" bandwidth qos-reference ", ""));
                 break;
             }
         }
+        try {
+            SNMPClient snmpClient = new SNMPClient(host.getName(), host.getCommunity(), "161");
+            snmpClient.start();
+            snmpClient.updatePort(WAN, ".1.3.6.1.2.1.2.2");
+            snmpClient.stop();
+            snmpClient.start();
+            snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1", host.ports);
+            snmpClient.stop();
+            Thread.sleep(300000);
+            snmpClient.start();
+            snmpClient.updatePort(WAN, ".1.3.6.1.2.1.2.2");
+            snmpClient.stop();
+            snmpClient.start();
+            snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1", host.ports);
+            snmpClient.stop();
+            while (true) {
+                try {
+                    watch();
+                    Thread.sleep(300);
+                } catch (Exception ee) {
+                    System.out.println(ee);
+                }
+            }
+        } catch (Exception ee) {
+            System.out.println(ee);
+        }
     }
 
-    private void watch(){
-        HashMap<Integer, Traffic> lastDump = WAN.getTimestampList().get(WAN.getTimestampList().size()-1).getDump();
-        HashMap<Integer, Traffic> preLastDump = WAN.getTimestampList().get(WAN.getTimestampList().size()-2).getDump();
-        SNMPClient snmp = new SNMPClient(host.getName(),host.getCommunity(),"161");
-        snmp.updatePort(WAN,".1.3.6.1.2.1.2.2");
-        long lastUsageTime = WAN.snapshotList.get(WAN.snapshotList.size()-1).Time ;
-        long preLastUsageTime = WAN.snapshotList.get(WAN.snapshotList.size()-2).Time;
-        long lastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size()-1).getIfInOctets();
-        long preLastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size()-2).getIfInOctets();
-        long currentBandwidthUsage = (lastUsageOctets - preLastUsageOctets)/(lastUsageTime-preLastUsageTime);
-        if ( currentBandwidthUsage/bandwidth>percent ) {
+    private void watch() {
+        HashMap<Integer, Traffic> lastDump = WAN.getTimestampList().get(WAN.getTimestampList().size() - 1).getDump();
+        HashMap<Integer, Traffic> preLastDump = WAN.getTimestampList().get(WAN.getTimestampList().size() - 2).getDump();
+        SNMPClient snmp = new SNMPClient(host.getName(), host.getCommunity(), "161");
+        try {
+            snmp.start();
+            snmp.updatePort(WAN, ".1.3.6.1.2.1.2.2");
+            snmp.stop();
+        } catch (Exception ee) {
+            System.out.println(ee);
+        }
+        long lastUsageTime = WAN.snapshotList.get(WAN.snapshotList.size() - 1).Time;
+        long preLastUsageTime = WAN.snapshotList.get(WAN.snapshotList.size() - 2).Time;
+        long lastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfInOctets();
+        long preLastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size() - 2).getIfInOctets();
+        long currentBandwidthUsage = (lastUsageOctets - preLastUsageOctets) / (lastUsageTime - preLastUsageTime);
+        if (currentBandwidthUsage / bandwidth > percent) {
             HashMap<Integer, Long> delta = new HashMap<Integer, Long>();
             long maxDelta = 0;
             String deltaName = "";
@@ -49,23 +82,23 @@ public class Logic {
             long allowedSum = 0;
             for (HashMap.Entry<Integer, Traffic> entry : lastDump.entrySet()) {
                 int index = entry.getKey();
-                if (preLastDump.get(index)==null) delta.put(index, entry.getValue().getCnpdAllStatsInBytes());
-                else delta.put(index, entry.getValue().getCnpdAllStatsInBytes() - preLastDump.get(index).getCnpdAllStatsInBytes());
-                if (maxDelta<delta.get(index)){
+                if (preLastDump.get(index) == null) delta.put(index, entry.getValue().getCnpdAllStatsInBytes());
+                else
+                    delta.put(index, entry.getValue().getCnpdAllStatsInBytes() - preLastDump.get(index).getCnpdAllStatsInBytes());
+                if (maxDelta < delta.get(index)) {
                     if (!allowed.contains(lastDump.get(index).getCnpdAllStatsProtocolsName())) {
                         maxDelta = delta.get(index);
                         deltaSum += maxDelta;
                         deltaName = lastDump.get(index).getCnpdAllStatsProtocolsName();
-                    }
-                    else {
+                    } else {
                         maxAllowed = delta.get(index);
                         allowedSum += delta.get(index);
                     }
                 }
             }
             //Надо найти сумму разрешенных и неразрешенных октетов и тогда уже блочить
-            if (maxDelta!=0){
-                if (allowedSum/(deltaSum+allowedSum)<allowedPercent){
+            if (maxDelta != 0) {
+                if (allowedSum / (deltaSum + allowedSum) < allowedPercent) {
                     makeShaping(deltaName, 300);
                 }
             }
@@ -73,16 +106,14 @@ public class Logic {
         checkMaps();
     }
 
-    private void makeShaping(String deltaName, int ttl){
+    private void makeShaping(String deltaName, int ttl) {
         String Time = getCurrentTimeUsingDate();
-        ClassMap CMAP = new ClassMap("match-all","CMAP"+Time,deltaName);
-        PolicyMap PMAP = new PolicyMap("PMAP"+Time,CMAP,shaper);
-        SshClient ssh = new SshClient(host.getUser(),host.getName(),host.getPassword());
-        try
-        {
+        ClassMap CMAP = new ClassMap("match-all", "CMAP" + Time, deltaName);
+        PolicyMap PMAP = new PolicyMap("PMAP" + Time, CMAP, shaper);
+        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+        try {
             ssh.RunCommands(makeCommand(PMAP));
-        }
-        catch (Exception ee){
+        } catch (Exception ee) {
             System.out.println(ee);
         }
         PMAP.setReverceCommands(makeReverce(PMAP));
@@ -102,71 +133,68 @@ public class Logic {
         return date;
     }
 
-    public ArrayList<String> makeCommand(PolicyMap PMAP){
+    public ArrayList<String> makeCommand(PolicyMap PMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         ClassMap CMAP = PMAP.getClassMap();
-        commands.add("class-map "+CMAP.getMatch()+" "+CMAP.getName());
-        commands.add("match protocol "+CMAP.getProtocol());
+        commands.add("class-map " + CMAP.getMatch() + " " + CMAP.getName());
+        commands.add("match protocol " + CMAP.getProtocol());
         commands.add("exit");
-        commands.add("policy-map "+PMAP.getName());
+        commands.add("policy-map " + PMAP.getName());
         commands.add("class " + CMAP.getName());
-        commands.add("police "+PMAP.getShaper()+" conform-action transmit exceed-action drop");
+        commands.add("police " + PMAP.getShaper() + " conform-action transmit exceed-action drop");
         commands.add("exit");
         commands.add("exit");
-        commands.add("interface "+LAN.snapshotList.get(LAN.snapshotList.size()-1).getIfDescr());
-        commands.add("service-policy output "+PMAP.getName());
+        commands.add("interface " + LAN.snapshotList.get(LAN.snapshotList.size() - 1).getIfDescr());
+        commands.add("service-policy output " + PMAP.getName());
         commands.add("exit");
         commands.add("exit");
         return commands;
     }
 
-    public ArrayList<String> makeReverce(PolicyMap PMAP){
+    public ArrayList<String> makeReverce(PolicyMap PMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         ClassMap CMAP = PMAP.getClassMap();
-        commands.add("no class-map "+CMAP.getMatch()+" "+CMAP.getName());
-        commands.add("no policy-map "+PMAP.getName());
-        commands.add("interface "+LAN.snapshotList.get(LAN.snapshotList.size()-1).getIfDescr());
-        commands.add("no service-policy output "+PMAP.getName());
+        commands.add("no class-map " + CMAP.getMatch() + " " + CMAP.getName());
+        commands.add("no policy-map " + PMAP.getName());
+        commands.add("interface " + LAN.snapshotList.get(LAN.snapshotList.size() - 1).getIfDescr());
+        commands.add("no service-policy output " + PMAP.getName());
         commands.add("exit");
         commands.add("exit");
         return commands;
     }
 
-    public void checkMaps(){
-        Iterator<PolicyMap> p = policyMaps.iterator();
-        while(p.hasNext()){
-            PolicyMap PMAP = p.next();
-            String name = PMAP.getName();
-            Date Time = stringToDate(name.replace("PMAP",""));
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(Time);
-            cal.add(Calendar.SECOND, 300);
-            Date newTime = cal.getTime();
-            if (getCurrentDate().after(newTime)){
-                SshClient ssh = new SshClient(host.getUser(),host.getName(),host.getPassword());
-                try
-                {
-                    ssh.RunCommands(PMAP.getReverceCommands());
+    public void checkMaps() {
+        if (policyMaps.size() == 0) {
+            Iterator<PolicyMap> p = policyMaps.iterator();
+            while (p.hasNext()) {
+                PolicyMap PMAP = p.next();
+                String name = PMAP.getName();
+                Date Time = stringToDate(name.replace("PMAP", ""));
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(Time);
+                cal.add(Calendar.SECOND, PMAP.getTTL());
+                Date newTime = cal.getTime();
+                if (getCurrentDate().after(newTime)) {
+                    SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+                    try {
+                        ssh.RunCommands(PMAP.getReverceCommands());
+                    } catch (Exception ee) {
+                        System.out.println(ee);
+                    }
+                    p.remove();
                 }
-                catch (Exception ee){
-                    System.out.println(ee);
-                }
-                p.remove();
             }
         }
     }
 
-    public Date stringToDate(String Time){
+    public Date stringToDate(String Time) {
         Date date = new Date();
-        String strDateFormat = "yyyyMMddHHmmss";
         DateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-        try
-        {
+        try {
             date = format.parse(Time);
-        }
-        catch (Exception ee){
+        } catch (Exception ee) {
             System.out.println(ee);
         }
         return date;

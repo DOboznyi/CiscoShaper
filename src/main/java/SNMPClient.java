@@ -367,9 +367,39 @@ public class SNMPClient
             }
         }
         for (Map.Entry<Integer,Port> entry : portList.entrySet()) {
-            entry.getValue().snapshotList.get(entry.getValue().snapshotList.size()-1).setIfAlias(getAsString(new OID(".1.3.6.1.2.1.31.1.1.1.18."+entry.getValue().getIfIndex())));
+            String response = getAsString(new OID(".1.3.6.1.2.1.31.1.1.1.18."+entry.getValue().getIfIndex()));
+            if (!response.equals("")) {
+                String[] tempArray = response.split(" ");
+                entry.getValue().snapshotList.get(entry.getValue().snapshotList.size() - 1).setIfAlias(tempArray[0]);
+                entry.getValue().snapshotList.get(entry.getValue().snapshotList.size() - 1).setRealSpeed(Long.parseLong(tempArray[1]));
+            }
         }
         return portList;
+    }
+
+    public void updatePort (Port Port, String oid){
+        if(oid == null)return;
+        if(!oid.startsWith("."))oid = "."+oid;
+        TableUtils tUtils = new TableUtils(snmp, new DefaultPDUFactory());
+        List<TableEvent> events = tUtils.getTable(getTarget(), new OID[]{new OID(oid)}, null, null);
+
+        long time = System.currentTimeMillis();
+        for (TableEvent event : events) {
+            if(event.isError()) {
+                logger.warning(this.address + ": SNMP event error: "+event.getErrorMessage());
+                continue;
+                //throw new RuntimeException(event.getErrorMessage());
+            }
+            for(VariableBinding vb: event.getColumns()) {
+                String key = "."+vb.getOid().toString();
+                String newKey = key.replace(oid+".1.","");
+                String[] tokens = newKey.split("\\.");
+                int column = Integer.parseInt(tokens[0]);
+                int port = Integer.parseInt(tokens[1]);
+                String value = vb.getVariable().toString();
+                if (port == Port.getIfIndex()) Port.addInfo(value, column,time);
+            }
+        }
     }
 
     public void updateTrafficTable(String oid, HashMap<Integer,Port> portList) throws IOException
@@ -394,7 +424,7 @@ public class SNMPClient
                 int column = Integer.parseInt(tokens[0]);
                 int port = Integer.parseInt(tokens[1]);
                 int index = Integer.parseInt(tokens[2]);
-                if (portList.get(port).getTimestampList().get(portList.get(port).getTimestampList().size()-1).Time!=time) portList.get(port).getTimestampList().add(new Timestamp(time));
+                if (portList.get(port).getTimestampList().size()==0||portList.get(port).getTimestampList().get(portList.get(port).getTimestampList().size()-1).Time!=time) portList.get(port).getTimestampList().add(new Timestamp(time));
                 String value = vb.getVariable().toString();
                 portList.get(port).getTimestampList().get(portList.get(port).getTimestampList().size()-1).addInfo(value,column,index);
                 //portList.add(new SNMPTriple(key, "", value));
@@ -435,29 +465,5 @@ public class SNMPClient
             return SnmpConstants.version3;
         else
             return SnmpConstants.version2c;
-    }
-
-    public void updatePort (Port Port, String oid){
-        if(oid == null)return;
-        if(!oid.startsWith("."))oid = "."+oid;
-        TableUtils tUtils = new TableUtils(snmp, new DefaultPDUFactory());
-        List<TableEvent> events = tUtils.getTable(getTarget(), new OID[]{new OID(oid)}, null, null);
-        long time = System.currentTimeMillis();
-        for (TableEvent event : events) {
-            if(event.isError()) {
-                logger.warning(this.address + ": SNMP event error: "+event.getErrorMessage());
-                continue;
-                //throw new RuntimeException(event.getErrorMessage());
-            }
-            for(VariableBinding vb: event.getColumns()) {
-                String key = "."+vb.getOid().toString();
-                String newKey = key.replace(oid+".1.","");
-                String[] tokens = newKey.split("\\.");
-                int column = Integer.parseInt(tokens[0]);
-                int port = Integer.parseInt(tokens[1]);
-                String value = vb.getVariable().toString();
-                if (Port.getIfIndex()==port)Port.addInfo(value, column, time);
-            }
-        }
     }
 }

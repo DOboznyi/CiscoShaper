@@ -22,6 +22,15 @@ public class Snapshot {
     int ifSpecific;
     String ifAlias;
     long Time;
+    long realSpeed;
+
+    public long getRealSpeed() {
+        return realSpeed;
+    }
+
+    public void setRealSpeed(long realSpeed) {
+        this.realSpeed = realSpeed;
+    }
 
     public String getIfAlias() {
         return ifAlias;
