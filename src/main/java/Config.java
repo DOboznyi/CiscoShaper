@@ -3,11 +3,6 @@ import java.util.ArrayList;
 import java.io.*;
 
 public class Config {
-    String name;
-    String user;
-    String password;
-    String community;
-    ArrayList<String> Protocols;
     ArrayList<Host> hosts;
 
     public Config(String Path){
@@ -65,8 +60,8 @@ public class Config {
         }
     }
 
-    private ArrayList<PolicyMap> getPolicyMaps(){
-        SshClient ssh = new SshClient(user,name,password);
+    private ArrayList<PolicyMap> getPolicyMaps(Host host){
+        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
         ArrayList<String> results = ssh.executeCommand("show policy-map");
         return null;
     }

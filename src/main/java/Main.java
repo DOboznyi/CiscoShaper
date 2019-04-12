@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class Main {
     public static void main(String[] args) throws Exception{
-        SNMPClient snmpClient = new SNMPClient("172.17.0.130", "private","161");
+        SNMPClient snmpClient = new SNMPClient("172.16.0.130", "private","161");
         snmpClient.start();
         HashMap<Integer,Port> ports =snmpClient.getInterfaceTable(".1.3.6.1.2.1.2.2");
         snmpClient.stop();

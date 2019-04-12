@@ -1,9 +1,3 @@
-/*
- * Copyright 2015, Yahoo Inc.
- * Copyrights licensed under the Apache License.
- * See the accompanying LICENSE file for terms.
- */
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -40,67 +34,9 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.TableEvent;
 import org.snmp4j.util.TableUtils;
-
-/**
- * A simple SNMP client to poll a single MySQL server for OS performance metrics, such as CPU, memory, disk usage, etc.
- * This SNMP client uses snmp4j open source library.
- * @author xrao
- *
- */
 public class SNMPClient
 {
-    //common UC DAVIS oid
-    public final static String memTotalSwap =      ".1.3.6.1.4.1.2021.4.3.0";
-    public final static String memAvailSwap =      ".1.3.6.1.4.1.2021.4.4.0";
-    public final static String memTotalReal =      ".1.3.6.1.4.1.2021.4.5.0";
-    public final static String memAvailReal =      ".1.3.6.1.4.1.2021.4.6.0";
-    public final static String memTotalSwapTXT =   ".1.3.6.1.4.1.2021.4.7.0";
-    public final static String memTotalRealTXT =   ".1.3.6.1.4.1.2021.4.9.0";
-    public final static String memTotalFree =      ".1.3.6.1.4.1.2021.4.11.0";
-    public final static String memShared =         ".1.3.6.1.4.1.2021.4.13.0";
-    public final static String memBuffer =         ".1.3.6.1.4.1.2021.4.14.0";
-    public final static String memCached =         ".1.3.6.1.4.1.2021.4.15.0";
-    public final static String memUsedSwapTXT =    ".1.3.6.1.4.1.2021.4.16.0";
-    public final static String memUsedRealTXT =    ".1.3.6.1.4.1.2021.4.17.0";
-    public final static String ssSwapIn =          ".1.3.6.1.4.1.2021.11.3.0";
-    public final static String ssSwapOut =         ".1.3.6.1.4.1.2021.11.4.0";
-    public final static String ssIOSent =          ".1.3.6.1.4.1.2021.11.5.0";
-    public final static String ssIOReceive =       ".1.3.6.1.4.1.2021.11.6.0";
-    public final static String ssSysInterrupts =   ".1.3.6.1.4.1.2021.11.7.0";
-    public final static String ssSysContext =      ".1.3.6.1.4.1.2021.11.8.0";
-    public final static String ssCpuUser =         ".1.3.6.1.4.1.2021.11.9.0";
-    public final static String ssCpuSystem =       ".1.3.6.1.4.1.2021.11.10.0";
-    public final static String ssCpuIdle =         ".1.3.6.1.4.1.2021.11.11.0";
-    public final static String ssCpuRawUser =      ".1.3.6.1.4.1.2021.11.50.0";
-    public final static String ssCpuRawNice =      ".1.3.6.1.4.1.2021.11.51.0";
-    public final static String ssCpuRawSystem=     ".1.3.6.1.4.1.2021.11.52.0";
-    public final static String ssCpuRawIdle =      ".1.3.6.1.4.1.2021.11.53.0";
-    public final static String ssCpuRawWait =      ".1.3.6.1.4.1.2021.11.54.0";
-    public final static String ssCpuRawKernel =    ".1.3.6.1.4.1.2021.11.55.0";
-    public final static String ssCpuRawInterrupt = ".1.3.6.1.4.1.2021.11.56.0";
-    public final static String ssIORawSent =       ".1.3.6.1.4.1.2021.11.57.0";
-    public final static String ssIORawReceived =   ".1.3.6.1.4.1.2021.11.58.0";
-    public final static String ssRawInterrupts =   ".1.3.6.1.4.1.2021.11.59.0";
-    public final static String ssRawContexts =     ".1.3.6.1.4.1.2021.11.60.0";
-    public final static String ssCpuRawSoftIRQ =   ".1.3.6.1.4.1.2021.11.61.0";
-    public final static String ssRawSwapIn =       ".1.3.6.1.4.1.2021.11.62.0";
-    public final static String ssRawSwapOut =      ".1.3.6.1.4.1.2021.11.63.0";
-    public final static String ssCpuRawSteal =      ".1.3.6.1.4.1.2021.11.64.0";
-    public final static String ssCpuRawGuest =      ".1.3.6.1.4.1.2021.11.65.0";
-    public final static String ssCpuRawGuestNice =  ".1.3.6.1.4.1.2021.11.66.0";
-    public final static String laLoad1m =          ".1.3.6.1.4.1.2021.10.1.3.1";
-    public final static String laLoad5m =          ".1.3.6.1.4.1.2021.10.1.3.2";
-    public final static String laLoad15m =         ".1.3.6.1.4.1.2021.10.1.3.3";
-    public final static String hrSystemUptime =    ".1.3.6.1.2.1.25.1.1.0";
-    public final static String hrSystemNumUsers=   ".1.3.6.1.2.1.25.1.5.0";
-    public final static String hrSystemProcesses = ".1.3.6.1.2.1.25.1.6.0";
-    public final static String tcpAttemptFails =   ".1.3.6.1.2.1.6.7.0";
-    public final static String tcpCurrEstab =      ".1.3.6.1.2.1.6.9.0";
-    //tcpCurrEstab
-    public static OID[] COMMON_SYS_OIDS = null;
 
-    public static final  Map<String, String> OID_MAP = new LinkedHashMap<String, String>(); //Name to OID
-    public static final Map<String, String> OID_NAME_MAP = new LinkedHashMap<String, String>(); //OID to Name
     private static Logger logger = Logger.getLogger(SNMPClient.class.getName());
 
     Snmp snmp = null;
@@ -114,64 +50,6 @@ public class SNMPClient
     private String privacypassphrase;
     private String privacyprotocol;
     private String context;
-    static
-    {
-        OID_MAP.put("memTotalSwap",memTotalSwap);
-        OID_MAP.put("memAvailSwap", memAvailSwap);
-        OID_MAP.put("memTotalReal", memTotalReal);
-        OID_MAP.put("memAvailReal", memAvailReal);
-        OID_MAP.put("memTotalSwapTXT", memTotalSwapTXT);
-        OID_MAP.put("memTotalRealTXT", memTotalRealTXT);
-        OID_MAP.put("memTotalFree", memTotalFree);
-        OID_MAP.put("memShared", memShared);
-        OID_MAP.put("memBuffer",    memBuffer);
-        OID_MAP.put("memCached",    memCached);
-        OID_MAP.put("memUsedSwapTXT", memUsedSwapTXT);
-        OID_MAP.put("memUsedRealTXT", memUsedRealTXT);
-        OID_MAP.put("ssSwapIn",     ssSwapIn);
-        OID_MAP.put("ssSwapOut",    ssSwapOut);
-        OID_MAP.put("ssIOSent",     ssIOSent);
-        OID_MAP.put("ssIOReceive",  ssIOReceive);
-        OID_MAP.put("ssSysInterrupts",ssSysInterrupts);
-        OID_MAP.put("ssSysContext",  ssSysContext);
-        OID_MAP.put("ssCpuUser",     ssCpuUser);
-        OID_MAP.put("ssCpuSystem",   ssCpuSystem);
-        OID_MAP.put("ssCpuIdle",     ssCpuIdle);
-        OID_MAP.put("ssCpuRawUser",  ssCpuRawUser);
-        OID_MAP.put("ssCpuRawNice",  ssCpuRawNice);
-        OID_MAP.put("ssCpuRawSystem",ssCpuRawSystem);
-        OID_MAP.put("ssCpuRawIdle",  ssCpuRawIdle);
-        OID_MAP.put("ssCpuRawWait",  ssCpuRawWait);
-        OID_MAP.put("ssCpuRawKernel", ssCpuRawKernel);
-        OID_MAP.put("ssCpuRawInterrupt",ssCpuRawInterrupt);
-        OID_MAP.put("ssIORawSent",     ssIORawSent);
-        OID_MAP.put("ssIORawReceived" ,ssIORawReceived);
-        OID_MAP.put("ssRawInterrupts", ssRawInterrupts);
-        OID_MAP.put("ssRawContexts",   ssRawContexts);
-        OID_MAP.put("ssCpuRawSoftIRQ", ssCpuRawSoftIRQ);
-        OID_MAP.put("ssRawSwapIn",     ssRawSwapIn);
-        OID_MAP.put("ssRawSwapOut",    ssRawSwapOut);
-        OID_MAP.put("ssCpuRawSteal",    ssCpuRawSteal);
-        OID_MAP.put("ssCpuRawGuest",    ssCpuRawGuest);
-        OID_MAP.put("ssCpuRawGuestNice",    ssCpuRawGuestNice);
-        OID_MAP.put("laLoad1m",  laLoad1m);
-        OID_MAP.put("laLoad5m",  laLoad5m);
-        OID_MAP.put("laLoad15m",  laLoad15m);
-        OID_MAP.put("hrSystemUptime",hrSystemUptime);
-        OID_MAP.put("hrSystemNumUsers",hrSystemNumUsers);
-        OID_MAP.put("hrSystemProcesses",hrSystemProcesses);
-        OID_MAP.put("tcpAttemptFails",tcpAttemptFails);
-        OID_MAP.put("tcpCurrEstab",tcpCurrEstab);
-
-        COMMON_SYS_OIDS = new OID[OID_MAP.size()];
-        int oidIdx = 0;
-        for(Map.Entry<String, String> e: OID_MAP.entrySet())
-        {
-            OID_NAME_MAP.put(e.getValue(), e.getKey());
-            COMMON_SYS_OIDS[oidIdx] = new OID(e.getValue());
-            oidIdx ++;
-        }
-    };
 
     public static class SNMPTriple
     {

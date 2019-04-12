@@ -17,9 +17,9 @@ public class Logic extends Thread{
         this.host = host;
         this.WAN = WAN;
         this.LAN = LAN;
-        this.percent = percent;
+        this.percent = percent; //Загруженность канала
         allowed = host.protocols;
-        this.allowedPercent = allowedPercent;
+        this.allowedPercent = allowedPercent; //Защита от блокирования разрешенных (когда разрешенные "съедают" трафик)
         policyMaps = new ArrayList<PolicyMap>();
         SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
         ArrayList<String> result = ssh.executeCommand("show running-config interface " + WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfDescr());
@@ -37,7 +37,7 @@ public class Logic extends Thread{
             snmpClient.start();
             snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1", host.ports);
             snmpClient.stop();
-            Thread.sleep(300000);
+            //Thread.sleep(300000);
             snmpClient.start();
             snmpClient.updatePort(WAN, ".1.3.6.1.2.1.2.2");
             snmpClient.stop();
