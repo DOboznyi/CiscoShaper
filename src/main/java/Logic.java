@@ -2,17 +2,55 @@ import java.util.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+/**
+ * Class for describing logic of watching network activity.
+ */
 public class Logic extends Thread{
+    /**
+     * WAN port of host.
+     */
     Port WAN;
+    /**
+     * Bandwidth of link channel.
+     */
     Long bandwidth;
+    /**
+     * LAN port of host.
+     */
     Port LAN;
+    /**
+     * Allowed percent of channel load.
+     */
     double percent;
+    /**
+     * Percent of allowed protocols. When allowed protocols uses much bigger part of bandwidth it's no need to block something.
+     */
     double allowedPercent;
+    /**
+     * List of allowed protocols.
+     */
     ArrayList<String> allowed;
+    /**
+     * List of Policy Maps created for host.
+     */
     ArrayList<PolicyMap> policyMaps;
+    /**
+     * Speed for some protocol after making a shaping.
+     */
     int shaper;
+    /**
+     * Host for which making protocol analyzing.
+     */
     Host host;
 
+    /**
+     * Constructor for logic of watching network activity.
+     * @param host host for which making protocol analyzing.
+     * @param WAN WAN port of host.
+     * @param LAN LAN port of host.
+     * @param percent allowed percent of channel load.
+     * @param allowedPercent percent of allowed protocols. When allowed protocols uses much bigger part of bandwidth it's no need to block something.
+     */
     public Logic(Host host, Port WAN, Port LAN, double percent, double allowedPercent) {
         this.host = host;
         this.WAN = WAN;
@@ -57,6 +95,9 @@ public class Logic extends Thread{
         }
     }
 
+    /**
+     * Method to watch network activity on the host.
+     */
     private void watch() {
         HashMap<Integer, Traffic> lastDump = WAN.getTimestampList().get(WAN.getTimestampList().size() - 1).getDump();
         HashMap<Integer, Traffic> preLastDump = WAN.getTimestampList().get(WAN.getTimestampList().size() - 2).getDump();
@@ -98,7 +139,7 @@ public class Logic extends Thread{
             }
             //Надо найти сумму разрешенных и неразрешенных октетов и тогда уже блочить
             if (maxDelta != 0) {
-                if (allowedSum / (deltaSum + allowedSum) < allowedPercent) {
+                if ((allowedSum / (deltaSum + allowedSum)) < allowedPercent) {
                     makeShaping(deltaName, 300);
                 }
             }
@@ -106,6 +147,11 @@ public class Logic extends Thread{
         checkMaps();
     }
 
+    /**
+     * Method to make the commands for shaping and send them to host.
+     * @param deltaName name of protocol.
+     * @param ttl time to live of shaping.
+     */
     private void makeShaping(String deltaName, int ttl) {
         String Time = getCurrentTimeUsingDate();
         ClassMap CMAP = new ClassMap("match-all", "CMAP" + Time, deltaName);
@@ -116,11 +162,15 @@ public class Logic extends Thread{
         } catch (Exception ee) {
             System.out.println(ee);
         }
-        PMAP.setReverceCommands(makeReverce(PMAP));
+        PMAP.setReverceCommands(makeReverse(PMAP));
         PMAP.setTTL(ttl);
         policyMaps.add(PMAP);
     }
 
+    /**
+     * Method to get string of current time.
+     * @return string like "yyyyMMddHHmmss".
+     */
     public String getCurrentTimeUsingDate() {
         Date date = new Date();
         String strDateFormat = "yyyyMMddHHmmss";
@@ -128,12 +178,21 @@ public class Logic extends Thread{
         return dateFormat.format(date);
     }
 
+    /**
+     * Method to get current date.
+     * @return object Date with current parameters.
+     */
     public Date getCurrentDate() {
         Date date = new Date();
         return date;
     }
 
-    public ArrayList<String> makeCommand(PolicyMap PMAP) {
+    /**
+     * Method to make straight command to set CMAP and PMAP.
+     * @param PMAP PMAP which will be convert into commands.
+     * @return list of commands
+     */
+    private ArrayList<String> makeCommand(PolicyMap PMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         ClassMap CMAP = PMAP.getClassMap();
@@ -152,7 +211,12 @@ public class Logic extends Thread{
         return commands;
     }
 
-    public ArrayList<String> makeReverce(PolicyMap PMAP) {
+    /**
+     * Method to make reverse command to set CMAP and PMAP.
+     * @param PMAP PMAP which will be convert into commands.
+     * @return list of commands.
+     */
+    private ArrayList<String> makeReverse(PolicyMap PMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         ClassMap CMAP = PMAP.getClassMap();
@@ -165,6 +229,9 @@ public class Logic extends Thread{
         return commands;
     }
 
+    /**
+     * Method to check if PMAP ttl expired.
+     */
     public void checkMaps() {
         if (policyMaps.size() == 0) {
             Iterator<PolicyMap> p = policyMaps.iterator();
@@ -189,6 +256,11 @@ public class Logic extends Thread{
         }
     }
 
+    /**
+     * Method to covert string to date format.
+     * @param Time time in string format.
+     * @return time in DateFormat.
+     */
     public Date stringToDate(String Time) {
         Date date = new Date();
         DateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");

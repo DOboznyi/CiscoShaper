@@ -7,9 +7,9 @@ import java.util.*;
 
 class SshClient
 {
-    String user = "";            //CHANGE ME
-    String host = ""; //CHANGE ME
-    String passwd = "";      //CHANGE ME
+    String user;
+    String host;
+    String passwd;
 
     SshClient(String user,String host,String passwd){
         this.user = user;

@@ -2,17 +2,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Class for describing host.
+ */
 public class Host {
+    /**
+     * Name of the host. IP address or domain name.
+     */
     String name;
+    /**
+     * User name for connecting via SSH.
+     */
     String user;
+    /**
+     * Password for connecting via SSH.
+     */
     String password;
+    /**
+     * Community string for connecting via SNMP.
+     */
     String community;
+    /**
+     * List of allowed protocols.
+     */
     ArrayList<String> protocols;
+    /**
+     * List of ports in host.
+     */
     HashMap<Integer,Port> ports;
+    /**
+     * WAN port in host.
+     */
     Port WAN;
+    /**
+     * LAN port in host.
+     */
     Port LAN;
+    /**
+     * Object logic for watching activity in host.
+     */
     Logic logic;
 
+    /**
+     * Constructor for host in the system.
+     * @param name name of the host. IP address or domain name.
+     * @param user user name for connecting via SSH.
+     * @param password password for connecting via SSH.
+     * @param community community string for connecting via SNMP.
+     * @param protocols list of allowed protocols.
+     */
     public Host(String name, String user, String password, String community, ArrayList<String> protocols) {
         this.name = name;
         this.user = user;
@@ -20,30 +58,53 @@ public class Host {
         this.community = community;
         this.protocols = protocols;
         getPorts();
-        getPolicyMaps();
+        cleanMaps();
         makeLogic();
     }
 
+    /**
+     * Method for getting name of the host.
+     * @return name of the host.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Method for getting user name for connecting via SSH.
+     * @return user name for connecting via SSH.
+     */
     public String getUser() {
         return user;
     }
 
+    /**
+     * Method for getting password for connecting via SSH.
+     * @return password for connecting via SSH.
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Method for getting community string for connecting via SNMP.
+     * @return community string for connecting via SNMP.
+     */
     public String getCommunity() {
         return community;
     }
 
+    /**
+     * Method for getting list of allowed protocols.
+     * @return list of allowed protocols.
+     */
     public ArrayList<String> getProtocols() {
         return protocols;
     }
 
+    /**
+     * Method to get WAN and LAN port and their timestamp via SNMP.
+     */
     public void getPorts() {
         SNMPClient snmpClient = new SNMPClient(name, community,"161");
         try
@@ -69,11 +130,17 @@ public class Host {
         }
     }
 
+    /**
+     * Method to run logic and watch for network activity
+     */
     public void makeLogic() {
         logic = new Logic(this,WAN,LAN,80, 50);
     }
 
-    private ArrayList<PolicyMap> getPolicyMaps(){
+    /**
+     * Method to clean maps when program restarting or has been terminated.
+     */
+    private void cleanMaps(){
         SshClient ssh = new SshClient(user, name, password);
         ArrayList<String> results = ssh.executeCommand("show running-config | section class-map");
         ArrayList<ClassMap> classMaps = new ArrayList<ClassMap>();
@@ -121,9 +188,13 @@ public class Host {
                 System.out.println(ee);
             }
         }
-        return null;
     }
 
+    /**
+     * Method to identify string as Data type. Data type provides 14 digits number.
+     * @param s name of the map without "CMAP" or "PMAP".
+     * @return result of identification.
+     */
     private boolean isData(String s)
     {
         if (s.length()==14) {
@@ -136,7 +207,12 @@ public class Host {
         return true;
     }
 
-    public ArrayList<String> makeRevercePMAP(PolicyMap PMAP) {
+    /**
+     * Method to make a list of commands to remove PMAP.
+     * @param PMAP PMAP which may be deleted.
+     * @return list of commands.
+     */
+    private ArrayList<String> makeRevercePMAP(PolicyMap PMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         commands.add("no policy-map " + PMAP.getName());
@@ -147,7 +223,12 @@ public class Host {
         return commands;
     }
 
-    public ArrayList<String> makeReverceCMAP(ClassMap CMAP) {
+    /**
+     * Method to make a list of commands to remove CMAP.
+     * @param CMAP CMAP which may be deleted.
+     * @return list of commands.
+     */
+    private ArrayList<String> makeReverceCMAP(ClassMap CMAP) {
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("configure terminal");
         commands.add("no class-map " + CMAP.getName());

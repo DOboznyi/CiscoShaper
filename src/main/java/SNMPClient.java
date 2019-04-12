@@ -200,23 +200,6 @@ public class SNMPClient
         return target;
     }
 
-    public List<SNMPTriple> querySingleSNMPEntryByOID(String oid) throws IOException
-    {
-        if(oid == null)return null;
-        if(!oid.startsWith("."))oid = "."+oid;
-        List<SNMPTriple> snmpList = new ArrayList<SNMPTriple>();
-        Map<OID, String> res = get(new OID[]{new OID(oid)});
-        if(res!=null)
-        {
-            for(Map.Entry<OID, String> e: res.entrySet())
-            {
-                //if("noSuchObject".equalsIgnoreCase(e.getValue()))continue;
-                snmpList.add(new SNMPTriple(e.getKey().toString(), "", e.getValue()));
-            }
-        }
-        return snmpList;
-    }
-
     public HashMap<Integer,Port> getInterfaceTable(String oid) throws IOException
     {
         if(oid == null)return null;
@@ -308,30 +291,6 @@ public class SNMPClient
                 //portList.add(new SNMPTriple(key, "", value));
             }
         }
-    }
-
-    public List<SNMPTriple> querySingleSNMPTableByOID(String oid) throws IOException
-    {
-        if(oid == null)return null;
-        if(!oid.startsWith("."))oid = "."+oid;
-        TableUtils tUtils = new TableUtils(snmp, new DefaultPDUFactory());
-        List<TableEvent> events = tUtils.getTable(getTarget(), new OID[]{new OID(oid)}, null, null);
-
-        List<SNMPTriple> snmpList = new ArrayList<SNMPTriple>();
-
-        for (TableEvent event : events) {
-            if(event.isError()) {
-                logger.warning(this.address + ": SNMP event error: "+event.getErrorMessage());
-                continue;
-                //throw new RuntimeException(event.getErrorMessage());
-            }
-            for(VariableBinding vb: event.getColumns()) {
-                String key = vb.getOid().toString();
-                String value = vb.getVariable().toString();
-                snmpList.add(new SNMPTriple(key, "", value));
-            }
-        }
-        return snmpList;
     }
 
 

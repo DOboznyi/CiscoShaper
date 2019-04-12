@@ -2,9 +2,19 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.io.*;
 
+/**
+ * Class for parsing config.yaml.
+ */
 public class Config {
+    /**
+     * Hosts described in config.yaml.
+     */
     ArrayList<Host> hosts;
 
+    /**
+     * Method to convert config in hosts objects.
+     * @param Path path to config.yaml which describes hosts.
+     */
     public Config(String Path){
         hosts = new ArrayList<Host>();
         ArrayList<String> list = new ArrayList<String>();
@@ -58,11 +68,5 @@ public class Config {
                 }
             }
         }
-    }
-
-    private ArrayList<PolicyMap> getPolicyMaps(Host host){
-        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
-        ArrayList<String> results = ssh.executeCommand("show policy-map");
-        return null;
     }
 }
