@@ -59,11 +59,11 @@ public class Logic extends Thread{
         allowed = host.protocols;
         this.allowedPercent = allowedPercent; //Защита от блокирования разрешенных (когда разрешенные "съедают" трафик)
         policyMaps = new ArrayList<PolicyMap>();
-        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+        SSHClient ssh = new SSHClient(host.getUser(), host.getName(), host.getPassword());
         ArrayList<String> result = ssh.executeCommand("show running-config interface " + WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfDescr());
         for (String str : result) {
-            if (str.contains(" bandwidth qos-reference ")) {
-                bandwidth = Long.parseLong(str.replaceAll(" bandwidth qos-reference ", ""));
+            if (str.contains(" description WAN ")) {
+                bandwidth = Long.parseLong(str.replaceAll(" description WAN ", ""))/(8*1000);
                 break;
             }
         }
@@ -75,17 +75,18 @@ public class Logic extends Thread{
             snmpClient.start();
             snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1", host.ports);
             snmpClient.stop();
-            //Thread.sleep(300000);
+            Thread.sleep(5000);
             snmpClient.start();
             snmpClient.updatePort(WAN, ".1.3.6.1.2.1.2.2");
             snmpClient.stop();
             snmpClient.start();
             snmpClient.updateTrafficTable(".1.3.6.1.4.1.9.9.244.1.2.1", host.ports);
             snmpClient.stop();
+            Thread.sleep(5000);
             while (true) {
                 try {
                     watch();
-                    Thread.sleep(300);
+                    Thread.sleep(5000);
                 } catch (Exception ee) {
                     System.out.println(ee);
                 }
@@ -113,8 +114,13 @@ public class Logic extends Thread{
         long preLastUsageTime = WAN.snapshotList.get(WAN.snapshotList.size() - 2).Time;
         long lastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfInOctets();
         long preLastUsageOctets = WAN.snapshotList.get(WAN.snapshotList.size() - 2).getIfInOctets();
-        long currentBandwidthUsage = (lastUsageOctets - preLastUsageOctets) / (lastUsageTime - preLastUsageTime);
+        double currentBandwidthUsage = (double)(lastUsageOctets - preLastUsageOctets) / (double)(lastUsageTime - preLastUsageTime);
+        System.out.println("currentBandwidthUsage "+ currentBandwidthUsage);
+        System.out.println("Bandwidth "+ bandwidth);
+        System.out.println("Current percent "+ currentBandwidthUsage / bandwidth);
+        System.out.println("Allowed percent "+ percent);
         if (currentBandwidthUsage / bandwidth > percent) {
+            System.out.println("NBAR analysis");
             HashMap<Integer, Long> delta = new HashMap<Integer, Long>();
             long maxDelta = 0;
             String deltaName = "";
@@ -126,6 +132,7 @@ public class Logic extends Thread{
                 if (preLastDump.get(index) == null) delta.put(index, entry.getValue().getCnpdAllStatsInBytes());
                 else
                     delta.put(index, entry.getValue().getCnpdAllStatsInBytes() - preLastDump.get(index).getCnpdAllStatsInBytes());
+                System.out.println(lastDump.get(index).getCnpdAllStatsProtocolsName()+ "\n Last usage = "+entry.getValue().getCnpdAllStatsInBytes()+"\n Prelast usage = "+ preLastDump.get(index).getCnpdAllStatsInBytes()+"\n delta = " + delta.get(index));
                 if (maxDelta < delta.get(index)) {
                     if (!allowed.contains(lastDump.get(index).getCnpdAllStatsProtocolsName())) {
                         maxDelta = delta.get(index);
@@ -140,11 +147,13 @@ public class Logic extends Thread{
             //Надо найти сумму разрешенных и неразрешенных октетов и тогда уже блочить
             if (maxDelta != 0) {
                 if ((allowedSum / (deltaSum + allowedSum)) < allowedPercent) {
-                    makeShaping(deltaName, 300);
+                    System.out.println("Shaping on " + deltaName);
+                    makeShaping(deltaName, 10);
                 }
             }
         }
         checkMaps();
+        System.out.println("____________________________________________________________");
     }
 
     /**
@@ -156,9 +165,15 @@ public class Logic extends Thread{
         String Time = getCurrentTimeUsingDate();
         ClassMap CMAP = new ClassMap("match-all", "CMAP" + Time, deltaName);
         PolicyMap PMAP = new PolicyMap("PMAP" + Time, CMAP, shaper);
-        SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+        SSHClient ssh = new SSHClient(host.getUser(), host.getName(), host.getPassword());
         try {
-            ssh.RunCommands(makeCommand(PMAP));
+            ArrayList<String> commands = makeCommand(PMAP);
+            System.out.println("Straight commands: ");
+            for ( String command: commands
+                 ) {
+                System.out.println(command);
+            }
+            //ssh.RunCommands(commands);
         } catch (Exception ee) {
             System.out.println(ee);
         }
@@ -233,20 +248,26 @@ public class Logic extends Thread{
      * Method to check if PMAP ttl expired.
      */
     public void checkMaps() {
-        if (policyMaps.size() == 0) {
+        if (policyMaps.size() != 0) {
             Iterator<PolicyMap> p = policyMaps.iterator();
             while (p.hasNext()) {
                 PolicyMap PMAP = p.next();
                 String name = PMAP.getName();
+                System.out.println("Cheking "+name);
                 Date Time = stringToDate(name.replace("PMAP", ""));
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(Time);
                 cal.add(Calendar.SECOND, PMAP.getTTL());
                 Date newTime = cal.getTime();
                 if (getCurrentDate().after(newTime)) {
-                    SshClient ssh = new SshClient(host.getUser(), host.getName(), host.getPassword());
+                    SSHClient ssh = new SSHClient(host.getUser(), host.getName(), host.getPassword());
                     try {
-                        ssh.RunCommands(PMAP.getReverceCommands());
+                        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Reverse commands: ");
+                        for ( String command: PMAP.getReverceCommands()
+                        ) {
+                            System.out.println(command);
+                        }
+                        //ssh.RunCommands(PMAP.getReverceCommands());
                     } catch (Exception ee) {
                         System.out.println(ee);
                     }

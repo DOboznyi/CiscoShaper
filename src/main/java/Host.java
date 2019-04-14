@@ -134,14 +134,14 @@ public class Host {
      * Method to run logic and watch for network activity
      */
     public void makeLogic() {
-        logic = new Logic(this,WAN,LAN,80, 50);
+        logic = new Logic(this,WAN,LAN,0.8, 0.5);
     }
 
     /**
      * Method to clean maps when program restarting or has been terminated.
      */
     private void cleanMaps(){
-        SshClient ssh = new SshClient(user, name, password);
+        SSHClient ssh = new SSHClient(user, name, password);
         ArrayList<String> results = ssh.executeCommand("show running-config | section class-map");
         ArrayList<ClassMap> classMaps = new ArrayList<ClassMap>();
         for (int i = 0; i<results.size();i++) {

@@ -5,18 +5,41 @@ import com.jcraft.jsch.Session;
 import java.io.*;
 import java.util.*;
 
-class SshClient
+/**
+ * Class for describing SSH client.
+ */
+class SSHClient
 {
+    /**
+     * User name for connecting via SSH.
+     */
     String user;
+    /**
+     * Name of the host. IP address or domain name.
+     */
     String host;
+    /**
+     * Password for connecting via SSH.
+     */
     String passwd;
 
-    SshClient(String user,String host,String passwd){
+    /**
+     * Constructor for SSH client.
+     * @param user user name for connecting via SSH.
+     * @param host name of the host. IP address or domain name.
+     * @param passwd password for connecting via SSH.
+     */
+    SSHClient(String user,String host,String passwd){
         this.user = user;
         this.host = host;
         this. passwd = passwd;
     }
 
+    /**
+     * Method to run list of commands via SSH.
+     * @param commands list of commands.
+     * @throws Exception when connection aborted.
+     */
     public void RunCommands(ArrayList<String> commands) throws Exception
     {
         JSch jsch = new JSch();
@@ -48,6 +71,13 @@ class SshClient
         session.disconnect();
     }
 
+    /**
+     * Method to print results after executing list of commands.
+     * @param input input stream from device.
+     * @param channel channel from device.
+     * @return list of strings with results of executed commands.
+     * @throws Exception when connection aborted.
+     */
     private ArrayList<String> printResult(InputStream input, Channel channel) throws Exception
     {
         ArrayList<String> result = new ArrayList<String>();
@@ -80,6 +110,11 @@ class SshClient
         return result;
     }
 
+    /**
+     * Method to run single command via SSH.
+     * @param command command which may be executed.
+     * @return result of execution.
+     */
     public ArrayList<String> executeCommand(String command)
     {
         int port = 22;

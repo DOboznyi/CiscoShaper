@@ -34,29 +34,79 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.TableEvent;
 import org.snmp4j.util.TableUtils;
+
+/**
+ * Class for describing SNMP client.
+ */
 public class SNMPClient
 {
 
     private static Logger logger = Logger.getLogger(SNMPClient.class.getName());
 
-    Snmp snmp = null;
-    String address = null;
+
+    Snmp snmp;
+    /**
+     * IP address with port to get info via SNMP.
+     */
+    String address;
+    /**
+     * Community string for connecting via SNMP.
+     */
     private String community;
+    /**
+     * Version of SNMP protocol.
+     */
     private String version;
     //v3 support
+    /**
+     * Username for connecting via SNMP V3.
+     */
     private String username;
+    /**
+     * Password for connecting via SNMP V3.
+     */
     private String password;
+    /**
+     * Authentification protocol for connecting via SNMP V3.
+     */
     private String authprotocol;
+    /**
+     * Privacy passphrase for encryption.
+     */
     private String privacypassphrase;
+    /**
+     * Privacy protocol for connecting via SNMP V3.
+     */
     private String privacyprotocol;
+    /**
+     * Context for connecting via SNMP V3.
+     */
     private String context;
 
+    /**
+     * Class to implement basic object in SNMP
+     */
     public static class SNMPTriple
     {
+        /**
+         * OID of object
+         */
         public String oid;
+        /**
+         * Name of object
+         */
         public String name;
+        /**
+         * Value which given via SNMP
+         */
         public String value;
 
+        /**
+         * Constructor for basic object in SNMP
+         * @param oid OID of object
+         * @param name name of object
+         * @param value value which given via SNMP
+         */
         public SNMPTriple(String oid, String name, String value)
         {
             this.oid = oid;
@@ -65,12 +115,22 @@ public class SNMPClient
         }
     }
 
+    /**
+     * Constructor for SNMP client.
+     * @param host_name name of the host. IP address or domain name.
+     * @param community community string for connecting via SNMP.
+     * @param port port which use host to communicate via SNMP.
+     */
     public SNMPClient(String host_name, String community, String port)
     {
         this.community = community;
         address = "udp:"+host_name+"/"+port;
     }
 
+    /**
+     * Method to start SNMP connection.
+     * @throws IOException when connection was failed.
+     */
     public void start() throws IOException
     {
         TransportMapping transport = new DefaultUdpTransportMapping();
@@ -84,16 +144,21 @@ public class SNMPClient
         transport.listen();
     }
 
+    /**
+     * Method to start SNMP connection.
+     * @throws IOException when connection was failed.
+     */
     public void stop() throws IOException
     {
         if(snmp!=null)snmp.close();
         snmp = null;
     }
+
     /**
      * Method which takes a single OID and returns the response from the agent as a String.
-     * @param oid
-     * @return
-     * @throws IOException
+     * @param oid OID of object.
+     * @return string with response.
+     * @throws IOException when response was failed.
      */
     public String getAsString(OID oid) throws IOException {
         ResponseEvent res = getEvent(new OID[] { oid });
@@ -102,6 +167,10 @@ public class SNMPClient
         return null;
     }
 
+    /**
+     * Method to create PDU for SNMP connection.
+     * @return PDU for some version of SNMP.
+     */
     private PDU createPDU() {
         if(!"3".equals(this.version))
             return new PDU();
@@ -112,10 +181,10 @@ public class SNMPClient
     }
 
     /**
-     * This method is capable of handling multiple OIDs
-     * @param oids
-     * @return
-     * @throws IOException
+     * This method is capable of handling multiple OIDs.
+     * @param oids list of OIDs of object.
+     * @return map with responses.
+     * @throws IOException when connection timed out.
      */
     public Map<OID, String> get(OID oids[]) throws IOException
     {
@@ -139,6 +208,12 @@ public class SNMPClient
         throw new RuntimeException("GET timed out");
     }
 
+    /**
+     * Method to make response event via SNMP.
+     * @param oids OIDS for making response event.
+     * @return response event.
+     * @throws IOException when response timed out.
+     */
     public ResponseEvent getEvent(OID oids[]) throws IOException
     {
         PDU pdu = createPDU();
@@ -156,7 +231,7 @@ public class SNMPClient
     /**
      * This method returns a Target, which contains information about
      * where the data should be fetched and how.
-     * @return
+     * @return target with all information about connection.
      */
     private Target getTarget() {
         if("3".equals(this.version))return getTargetV3();
@@ -174,6 +249,11 @@ public class SNMPClient
         return target;
     }
 
+    /**
+     * This method returns a Target for SNMP V3, which contains information about
+     * where the data should be fetched and how.
+     * @return target with all information about connection via SNMP V3.
+     */
     private Target getTargetV3() {
         //logger.info("Use SNMP v3, "+this.privacyprotocol +"="+this.password+", "+this.privacyprotocol+"="+this.privacypassphrase);
         OID authOID = AuthMD5.ID;
@@ -200,6 +280,12 @@ public class SNMPClient
         return target;
     }
 
+    /**
+     * Method to get table of interfaces on host.
+     * @param oid OID for get table.
+     * @return hash map with indexes and ports.
+     * @throws IOException when connection was failed.
+     */
     public HashMap<Integer,Port> getInterfaceTable(String oid) throws IOException
     {
         if(oid == null)return null;
@@ -238,6 +324,11 @@ public class SNMPClient
         return portList;
     }
 
+    /**
+     * Update network usage on port.
+     * @param Port object which contain all information about port.
+     * @param oid OID for updating information.
+     */
     public void updatePort (Port Port, String oid){
         if(oid == null)return;
         if(!oid.startsWith("."))oid = "."+oid;
@@ -263,6 +354,12 @@ public class SNMPClient
         }
     }
 
+    /**
+     * Method for updating NBAR information.
+     * @param oid OID for update.
+     * @param portList list of ports.
+     * @throws IOException when update was failed.
+     */
     public void updateTrafficTable(String oid, HashMap<Integer,Port> portList) throws IOException
     {
         if(oid == null)return;
@@ -293,7 +390,10 @@ public class SNMPClient
         }
     }
 
-
+    /**
+     * Method to get object with information about version of SNMP.
+     * @return version of SNMP.
+     */
     public int getVersionInt()
     {
         if("1".equals(this.version))

@@ -34,13 +34,6 @@ public class Port {
     }
 
     /**
-     * Method to set list of timestamps for port.
-     */
-    public void setTimestampList(ArrayList<Timestamp> trafficList) {
-        TimestampList = trafficList;
-    }
-
-    /**
      * Constructor for port.
      * @param ifIndex index of port.
      */
@@ -49,9 +42,9 @@ public class Port {
         TimestampList = new ArrayList<Timestamp>();
         snapshotList = new ArrayList<Snapshot>();
     }
-
     /**
      * Method to set index of port.
+     * @param ifIndex index of port.
      */
     public void setIfIndex(int ifIndex) {
         this.ifIndex = ifIndex;
@@ -59,9 +52,12 @@ public class Port {
 
     /**
      * Method to add info to the snapshots.
+     * @param info information.
+     * @param column column in table.
+     * @param time index in table.
      */
-    public void addInfo(String info, int Column, long Time){
-        if (snapshotList.size()==0||snapshotList.get(snapshotList.size()-1).Time!= Time)snapshotList.add(new Snapshot());
-        snapshotList.get(snapshotList.size()-1).addInfo(info,Column,Time);
+    public void addInfo(String info, int column, long time){
+        if (snapshotList.size()==0||snapshotList.get(snapshotList.size()-1).Time!= time)snapshotList.add(new Snapshot());
+        snapshotList.get(snapshotList.size()-1).addInfo(info,column,time);
     }
 }

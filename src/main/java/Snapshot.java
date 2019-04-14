@@ -1,257 +1,207 @@
+/**
+ * Class for describing stats of port.
+ */
 public class Snapshot {
+    /**
+     * A textual string containing information about the interface.
+     */
     String ifDescr;
-    int ifType;
-    int ifMtu;
+    /**
+     * The type of interface.
+     */
+    long ifType;
+    /**
+     * The size of the largest packet which can be sent/received on the interface, specified in octets.
+     */
+    long ifMtu;
+    /**
+     * An estimate of the interface's current bandwidth in bits per second.
+     */
     long ifSpeed;
+    /**
+     * The interface's address at its protocol sub-layer.
+     */
     String ifPhysAddress;
-    int ifAdminStatus;
-    int ifOperStatus;
+    /**
+     * The desired state of the interface.
+     */
+    long ifAdminStatus;
+    /**
+     * The current operational state of the interface.
+     */
+    long ifOperStatus;
+    /**
+     * The value of sysUpTime at the time the interface entered its current operational state.
+     */
     String ifLastChange;
-    int ifInOctets;
-    int ifInUcastPkts;
-    int ifInNUcastPkts;
-    int ifInDiscards;
-    int ifInErrors;
-    int ifInUnknownProtos;
-    int ifOutOctets;
-    int ifOutUcastPkts;
-    int ifOutNUcastPkts;
-    int ifOutDiscards;
-    int ifOutErrors;
-    int ifOutQLen;
-    int ifSpecific;
+    /**
+     * The total number of octets received on the interface, including framing characters.
+     */
+    long ifInOctets;
+    /**
+     * The number of packets, delivered by this sub-layer to a higher (sub-)layer,
+     * which were not addressed to a multicast or broadcast address at this sub-layer.
+     */
+    long ifInUcastPkts;
+    /**
+     * he number of packets, delivered by this sub-layer to a higher (sub-)layer,
+     * which were addressed to a multicast or broadcast address at this sub-layer.
+     */
+    long ifInNUcastPkts;
+    /**
+     * The number of inbound packets which were chosen to be discarded even
+     * though no errors had been detected to prevent their being deliverable
+     * to a higher-layer protocol.
+     */
+    long ifInDiscards;
+    /**
+     * For packet-oriented interfaces, the number of inbound packets
+     * that contained errors preventing them from being deliverable to a higher-layer protocol.
+     */
+    long ifInErrors;
+    /**
+     * For packet-oriented interfaces, the number of packets received
+     * via the interface which were discarded because of an unknown or unsupported protocol.
+     */
+    long ifInUnknownProtos;
+    /**
+     * The total number of octets transmitted out of the interface, including framing characters.
+     */
+    long ifOutOctets;
+    /**
+     * The total number of packets that higher-level protocols requested be transmitted,
+     * and which were not addressed to a multicast or broadcast address at this sub-layer,
+     * including those that were discarded or not sent.
+     */
+    long ifOutUcastPkts;
+    /**
+     * The total number of packets that higher-level protocols requested be transmitted,
+     * and which were addressed to a multicast or broadcast address at this sub-layer,
+     * including those that were discarded or not sent.
+     */
+    long ifOutNUcastPkts;
+    /**
+     * The number of outbound packets which were chosen to be discarded even
+     * though no errors had been detected to prevent their being transmitted.
+     */
+    long ifOutDiscards;
+    /**
+     * For packet-oriented interfaces, the number of outbound packets that
+     * could not be transmitted because of errors.
+     */
+    long ifOutErrors;
+    /**
+     * The length of the output packet queue (in packets).
+     */
+    long ifOutQLen;
+    /**
+     * A reference to MIB definitions specific to the particular media being used to realize the interface.
+     */
+    long ifSpecific;
+    /**
+     * This object is an 'alias' name for the interface as specified by a network manager,
+     * and provides a non-volatile 'handle' for the interface.
+     */
     String ifAlias;
+    /**
+     * Current time.
+     */
     long Time;
+    /**
+     * Real speed of link channel.
+     */
     long realSpeed;
 
-    public long getRealSpeed() {
-        return realSpeed;
-    }
-
+    /**
+     * Method to set real speed link channel.
+     * @param realSpeed value of real speed link channel
+     */
     public void setRealSpeed(long realSpeed) {
         this.realSpeed = realSpeed;
     }
 
+    /**
+     * Method for getting alias of interface.
+     * @return string with alias of interface.
+     */
     public String getIfAlias() {
         return ifAlias;
     }
 
+    /**
+     * Method to set alias of interface.
+     * @param ifAlias string with alias of interface.
+     */
     public void setIfAlias(String ifAlias) {
         this.ifAlias = ifAlias;
     }
 
+    /**
+     * Method to get description of protocol.
+     * @return string with interface description.
+     */
     public String getIfDescr() {
         return ifDescr;
     }
 
-    public void setIfDescr(String ifDescr) {
-        this.ifDescr = ifDescr;
-    }
-
-    public int getIfType() {
-        return ifType;
-    }
-
-    public void setIfType(int ifType) {
-        this.ifType = ifType;
-    }
-
-    public int getIfMtu() {
-        return ifMtu;
-    }
-
-    public void setIfMtu(int ifMtu) {
-        this.ifMtu = ifMtu;
-    }
-
-    public long getIfSpeed() {
-        return ifSpeed;
-    }
-
-    public void setIfSpeed(long ifSpeed) {
-        this.ifSpeed = ifSpeed;
-    }
-
-    public String getIfPhysAddress() {
-        return ifPhysAddress;
-    }
-
-    public void setIfPhysAddress(String ifPhysAddress) {
-        this.ifPhysAddress = ifPhysAddress;
-    }
-
-    public int getIfAdminStatus() {
-        return ifAdminStatus;
-    }
-
-    public void setIfAdminStatus(int ifAdminStatus) {
-        this.ifAdminStatus = ifAdminStatus;
-    }
-
-    public int getIfOperStatus() {
-        return ifOperStatus;
-    }
-
-    public void setIfOperStatus(int ifOperStatus) {
-        this.ifOperStatus = ifOperStatus;
-    }
-
-    public String getIfLastChange() {
-        return ifLastChange;
-    }
-
-    public void setIfLastChange(String ifLastChange) {
-        this.ifLastChange = ifLastChange;
-    }
-
-    public int getIfInOctets() {
+    /**
+     * Method to get the total number of octets received on the interface, including framing characters.
+     * @return total number of octets received on the interface
+     */
+    public long getIfInOctets() {
         return ifInOctets;
     }
 
-    public void setIfInOctets(int ifInOctets) {
-        this.ifInOctets = ifInOctets;
-    }
-
-    public int getIfInUcastPkts() {
-        return ifInUcastPkts;
-    }
-
-    public void setIfInUcastPkts(int ifInUcastPkts) {
-        this.ifInUcastPkts = ifInUcastPkts;
-    }
-
-    public int getIfInNUcastPkts() {
-        return ifInNUcastPkts;
-    }
-
-    public void setIfInNUcastPkts(int ifInNUcastPkts) {
-        this.ifInNUcastPkts = ifInNUcastPkts;
-    }
-
-    public int getIfInDiscards() {
-        return ifInDiscards;
-    }
-
-    public void setIfInDiscards(int ifInDiscards) {
-        this.ifInDiscards = ifInDiscards;
-    }
-
-    public int getIfInErrors() {
-        return ifInErrors;
-    }
-
-    public void setIfInErrors(int ifInErrors) {
-        this.ifInErrors = ifInErrors;
-    }
-
-    public int getIfInUnknownProtos() {
-        return ifInUnknownProtos;
-    }
-
-    public void setIfInUnknownProtos(int ifInUnknownProtos) {
-        this.ifInUnknownProtos = ifInUnknownProtos;
-    }
-
-    public int getIfOutOctets() {
-        return ifOutOctets;
-    }
-
-    public void setIfOutOctets(int ifOutOctets) {
-        this.ifOutOctets = ifOutOctets;
-    }
-
-    public int getIfOutUcastPkts() {
-        return ifOutUcastPkts;
-    }
-
-    public void setIfOutUcastPkts(int ifOutUcastPkts) {
-        this.ifOutUcastPkts = ifOutUcastPkts;
-    }
-
-    public int getIfOutNUcastPkts() {
-        return ifOutNUcastPkts;
-    }
-
-    public void setIfOutNUcastPkts(int ifOutNUcastPkts) {
-        this.ifOutNUcastPkts = ifOutNUcastPkts;
-    }
-
-    public int getIfOutDiscards() {
-        return ifOutDiscards;
-    }
-
-    public void setIfOutDiscards(int ifOutDiscards) {
-        this.ifOutDiscards = ifOutDiscards;
-    }
-
-    public int getIfOutErrors() {
-        return ifOutErrors;
-    }
-
-    public void setIfOutErrors(int ifOutErrors) {
-        this.ifOutErrors = ifOutErrors;
-    }
-
-    public int getIfOutQLen() {
-        return ifOutQLen;
-    }
-
-    public void setIfOutQLen(int ifOutQLen) {
-        this.ifOutQLen = ifOutQLen;
-    }
-
-    public int getIfSpecific() {
-        return ifSpecific;
-    }
-
-    public void setIfSpecific(int ifSpecific) {
-        this.ifSpecific = ifSpecific;
-    }
-
-    public void addInfo(String info, int Column, long Time){
-        this.Time = Time;
-        switch (Column){
-            case 2: setIfDescr(info);
+    /**
+     * Method to add info to the table with dump of network usage at current time.
+     * @param info information.
+     * @param column column in table.
+     * @param time index in table.
+     */
+    public void addInfo(String info, int column, long time){
+        this.Time = time;
+        switch (column){
+            case 2: ifDescr=info;
                 break;
-            case 3: setIfType(Integer.parseInt(info));
+            case 3: ifType=Long.parseLong(info);
                 break;
-            case 4: setIfMtu(Integer.parseInt(info));
+            case 4: ifMtu=Long.parseLong(info);
                 break;
-            case 5: setIfSpeed(Long.parseLong(info));
+            case 5: ifSpeed=Long.parseLong(info);
                 break;
-            case 6: setIfPhysAddress(info);
+            case 6: ifPhysAddress=info;
                 break;
-            case 7: setIfAdminStatus(Integer.parseInt(info));
+            case 7: ifAdminStatus=Long.parseLong(info);
                 break;
-            case 8: setIfOperStatus(Integer.parseInt(info));
+            case 8: ifOperStatus=Long.parseLong(info);
                 break;
-            case 9: setIfLastChange(info);
+            case 9: ifLastChange=info;
                 break;
-            case 10: setIfInOctets(Integer.parseInt(info));
+            case 10: ifInOctets=Long.parseLong(info);
                 break;
-            case 11: setIfInUcastPkts(Integer.parseInt(info));
+            case 11: ifInUcastPkts=Long.parseLong(info);
                 break;
-            case 12: setIfInNUcastPkts(Integer.parseInt(info));
+            case 12: ifInNUcastPkts=Long.parseLong(info);
                 break;
-            case 13: setIfInDiscards(Integer.parseInt(info));
+            case 13: ifInDiscards=Long.parseLong(info);
                 break;
-            case 14: setIfInErrors(Integer.parseInt(info));
+            case 14: ifInErrors=Long.parseLong(info);
                 break;
-            case 15: setIfInUnknownProtos(Integer.parseInt(info));
+            case 15: ifInUnknownProtos=Long.parseLong(info);
                 break;
-            case 16: setIfOutOctets(Integer.parseInt(info));
+            case 16: ifOutOctets=Long.parseLong(info);
                 break;
-            case 17: setIfOutUcastPkts(Integer.parseInt(info));
+            case 17: ifOutUcastPkts=Long.parseLong(info);
                 break;
-            case 18: setIfOutNUcastPkts(Integer.parseInt(info));
+            case 18: ifOutNUcastPkts=Long.parseLong(info);
                 break;
-            case 19: setIfOutDiscards(Integer.parseInt(info));
+            case 19: ifOutDiscards=Long.parseLong(info);
                 break;
-            case 20: setIfOutErrors(Integer.parseInt(info));
+            case 20: ifOutErrors=Long.parseLong(info);
                 break;
-            case 21: setIfOutQLen(Integer.parseInt(info));
+            case 21: ifOutQLen=Long.parseLong(info);
                 break;
-            case 22: setIfSpecific(Integer.parseInt(info));
+            case 22: ifSpecific=Long.parseLong(info);
                 break;
         }
     }

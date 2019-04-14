@@ -43,15 +43,16 @@ public class PolicyMap {
     ArrayList<String> reverceCommands;
 
     /**
-     * Method to get time to live for PMAP
-     * @return time to live
+     * Method to get time to live for PMAP.
+     * @return time to live.
      */
     public int getTTL() {
         return TTL;
     }
 
     /**
-     * Method to set time to live for PMAP
+     * Method to set time to live for PMAP.
+     * @param TTL time to live.
      */
     public void setTTL(int TTL) {
         this.TTL = TTL;

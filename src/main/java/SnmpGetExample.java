@@ -1,4 +1,4 @@
-import org.snmp4j.CommunityTarget;
+/*import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
@@ -94,3 +94,5 @@ public class SnmpGetExample
         String res = snmpClient.getAsString(new OID(".1.3.6.1.2.1.31.1.1.1.18.2"));
     }
 }
+
+ */
