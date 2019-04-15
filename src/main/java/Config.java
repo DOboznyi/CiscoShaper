@@ -1,3 +1,5 @@
+import javafx.beans.binding.IntegerBinding;
+
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.io.*;
@@ -49,18 +51,38 @@ public class Config {
                                 i++;
                                 String community = list.get(i);
                                 i++;
-                                if (list.get(i).contains("protocols:")) {
-                                    ArrayList<String> protocols = new ArrayList<String>();
-                                    while(i+1<list.size()&&list.get(i+1).contains("-")&&!list.get(i+1).contains("host:")) {
+                                if (list.get(i).contains("update:")) {
+                                    i++;
+                                    int update = Integer.parseInt(list.get(i));
+                                    i++;
+                                    if (list.get(i).contains("TTL:")) {
                                         i++;
-                                        if (list.get(i).contains("-")) {
+                                        int TTL = Integer.parseInt(list.get(i));
+                                        i++;
+                                        if (list.get(i).contains("bandwidth_usage:")) {
                                             i++;
-                                            String protocol = list.get(i);
-                                            protocols.add(protocol);
+                                            double bandwidth_usage = Double.parseDouble(list.get(i));
+                                            i++;
+                                            if (list.get(i).contains("allowed_percent:")) {
+                                                i++;
+                                                double allowed_percent = Double.parseDouble(list.get(i));
+                                                i++;
+                                                if (list.get(i).contains("protocols:")) {
+                                                    ArrayList<String> protocols = new ArrayList<String>();
+                                                    while (i + 1 < list.size() && list.get(i + 1).contains("-") && !list.get(i + 1).contains("host:")) {
+                                                        i++;
+                                                        if (list.get(i).contains("-")) {
+                                                            i++;
+                                                            String protocol = list.get(i);
+                                                            protocols.add(protocol);
+                                                        }
+                                                    }
+                                                    Host host = new Host(name, user, password, community, update, TTL, bandwidth_usage, allowed_percent, protocols);
+                                                    hosts.add(host);
+                                                }
+                                            }
                                         }
                                     }
-                                    Host host = new Host(name,user,password,community,protocols);
-                                    hosts.add(host);
                                 }
                             }
                         }

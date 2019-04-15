@@ -42,6 +42,14 @@ public class Logic extends Thread{
      * Host for which making protocol analyzing.
      */
     Host host;
+    /**
+     * Update rate in seconds when watch run.
+     */
+    int update;
+    /**
+     * TTL for policy map.
+     */
+    int TTL;
 
     /**
      * Constructor for logic of watching network activity.
@@ -50,14 +58,18 @@ public class Logic extends Thread{
      * @param LAN LAN port of host.
      * @param percent allowed percent of channel load.
      * @param allowedPercent percent of allowed protocols. When allowed protocols uses much bigger part of bandwidth it's no need to block something.
+     * @param TTL TTL for policy map.
+     * @param update update rate in seconds when watch run.
      */
-    public Logic(Host host, Port WAN, Port LAN, double percent, double allowedPercent) {
+    public Logic(Host host, Port WAN, Port LAN, double percent, double allowedPercent, int TTL, int update) {
         this.host = host;
         this.WAN = WAN;
         this.LAN = LAN;
         this.percent = percent; //Загруженность канала
         allowed = host.protocols;
         this.allowedPercent = allowedPercent; //Защита от блокирования разрешенных (когда разрешенные "съедают" трафик)
+        this.TTL = TTL;
+        this.update = update;
         policyMaps = new ArrayList<PolicyMap>();
         SSHClient ssh = new SSHClient(host.getUser(), host.getName(), host.getPassword());
         ArrayList<String> result = ssh.executeCommand("show running-config interface " + WAN.snapshotList.get(WAN.snapshotList.size() - 1).getIfDescr());
@@ -87,7 +99,7 @@ public class Logic extends Thread{
             while (true) {
                 try {
                     watch();
-                    Thread.sleep(5000);
+                    Thread.sleep(update);
                 } catch (Exception ee) {
                     System.out.println(ee);
                 }
@@ -149,7 +161,7 @@ public class Logic extends Thread{
             if (maxDelta != 0) {
                 if ((allowedSum / (deltaSum + allowedSum)) < allowedPercent) {
                     System.out.println("Shaping on " + deltaName);
-                    makeShaping(deltaName, 30);
+                    makeShaping(deltaName, TTL);
                 }
             }
         }

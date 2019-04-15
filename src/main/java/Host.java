@@ -42,6 +42,22 @@ public class Host {
      * Object logic for watching activity in host.
      */
     Logic logic;
+    /**
+     * Update rate in seconds when watch run.
+     */
+    int update;
+    /**
+     * TTL for policy map.
+     */
+    int TTL;
+    /**
+     * Allowed bandwidth usage.
+     */
+    double bandwidth_usage;
+    /**
+     * Allowed percent of bandwidth of allowed protocols.
+     */
+    double allowed_percent;
 
     /**
      * Constructor for host in the system.
@@ -49,13 +65,21 @@ public class Host {
      * @param user user name for connecting via SSH.
      * @param password password for connecting via SSH.
      * @param community community string for connecting via SNMP.
+     * @param update update rate in seconds when watch run.
+     * @param TTL TTL for policy map.
+     * @param bandwidth_usage allowed bandwidth usage.
+     * @param allowed_percent allowed percent of bandwidth of allowed protocols.
      * @param protocols list of allowed protocols.
      */
-    public Host(String name, String user, String password, String community, ArrayList<String> protocols) {
+    public Host(String name, String user, String password, String community, int update, int TTL, double bandwidth_usage, double allowed_percent, ArrayList<String> protocols) {
         this.name = name;
         this.user = user;
         this.password = password;
         this.community = community;
+        this.update = update;
+        this.TTL = TTL;
+        this.bandwidth_usage = bandwidth_usage;
+        this.allowed_percent = allowed_percent;
         this.protocols = protocols;
         getPorts();
         cleanMaps();
@@ -134,7 +158,7 @@ public class Host {
      * Method to run logic and watch for network activity
      */
     public void makeLogic() {
-        logic = new Logic(this,WAN,LAN,0.8, 0.5);
+        logic = new Logic(this, WAN, LAN, bandwidth_usage, allowed_percent, TTL, update);
     }
 
     /**
@@ -150,11 +174,7 @@ public class Host {
                 String[] test = str.split(" ");
                 test[2].replace("CMAP","");
                 if (isData(test[2].replace("CMAP",""))){
-                    String str1 = results.get(i+1);
-                    if (str1.contains(" match protocol ")){
-                        String[] test1 = str1.split(" ");
-                        classMaps.add(new ClassMap(test[1].replace("match-",""),test[2],test1[3]));
-                    }
+                    classMaps.add(new ClassMap(test[1].replace("match-",""),test[2],null));
                 }
             }
         }
@@ -172,18 +192,18 @@ public class Host {
                 }
             }
         }
-        for (ClassMap CMAP: classMaps
-                ) {
+        for (PolicyMap PMAP: policyMaps
+        ) {
             try {
-                ssh.RunCommands(makeReverceCMAP(CMAP));
+                ssh.RunCommands(PMAP.getReverceCommands());
             } catch (Exception ee) {
                 System.out.println(ee);
             }
         }
-        for (PolicyMap PMAP: policyMaps
-             ) {
+        for (ClassMap CMAP: classMaps
+                ) {
             try {
-                ssh.RunCommands(PMAP.getReverceCommands());
+                ssh.RunCommands(makeReverceCMAP(CMAP));
             } catch (Exception ee) {
                 System.out.println(ee);
             }
