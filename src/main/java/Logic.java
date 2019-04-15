@@ -37,7 +37,7 @@ public class Logic extends Thread{
     /**
      * Speed for some protocol after making a shaping.
      */
-    int shaper;
+    long shaper;
     /**
      * Host for which making protocol analyzing.
      */
@@ -64,6 +64,7 @@ public class Logic extends Thread{
         for (String str : result) {
             if (str.contains(" description WAN ")) {
                 bandwidth = Long.parseLong(str.replaceAll(" description WAN ", ""))/(8*1000);
+                shaper = Long.parseLong(str.replaceAll(" description WAN ", ""))/10;
                 break;
             }
         }
@@ -148,7 +149,7 @@ public class Logic extends Thread{
             if (maxDelta != 0) {
                 if ((allowedSum / (deltaSum + allowedSum)) < allowedPercent) {
                     System.out.println("Shaping on " + deltaName);
-                    makeShaping(deltaName, 10);
+                    makeShaping(deltaName, 30);
                 }
             }
         }
@@ -173,7 +174,7 @@ public class Logic extends Thread{
                  ) {
                 System.out.println(command);
             }
-            //ssh.RunCommands(commands);
+            ssh.RunCommands(commands);
         } catch (Exception ee) {
             System.out.println(ee);
         }
@@ -267,7 +268,7 @@ public class Logic extends Thread{
                         ) {
                             System.out.println(command);
                         }
-                        //ssh.RunCommands(PMAP.getReverceCommands());
+                        ssh.RunCommands(PMAP.getReverceCommands());
                     } catch (Exception ee) {
                         System.out.println(ee);
                     }
